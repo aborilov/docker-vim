@@ -1,23 +1,30 @@
+# from alpine
 from jare/alpine-vim
-# Used to configure YouCompleteMe
-ENV GOROOT="/usr/lib/go"
-ENV GOBIN="$GOROOT/bin"
 ENV GOPATH="/go"
-ENV PATH="$PATH:$GOBIN:$GOPATH/bin"
-RUN cd /root/ \
-&& apk add --update git \
+ENV PATH="$PATH:$GOPATH/bin"
+RUN apk add --update git \
 bash \
 rsync \
-ctags \
+vim \
+tmux \
+zsh \
 python \
 python-dev \
-cmake \
 build-base \
-go \
-&& git clone https://github.com/aborilov/dotfiles.git \
-&& cd dotfiles && ./bootstrap.sh -f && cd ~ \
-&& git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim \
-&& vim +PluginInstall +qall \
-&& .vim/bundle/YouCompleteMe/install.py --gocode-completer
-ENV TERM=xterm-256color
-WORKDIR /src
+ctags \
+cmake \
+go
+RUN bash -c "$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)"
+
+RUN git clone https://github.com/aborilov/dotfiles.git \
+&& cd /dotfiles && ./bootstrap.sh -f && rm -rf /dotfiles
+
+RUN git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim \
+&& vim +PluginInstall +qall
+
+RUN mkdir /go \
+&& vim +'silent :GoInstallBinaries' +qall
+
+RUN ~/.vim/bundle/YouCompleteMe/install.py --gocode-completer
+
+ENTRYPOINT ["zsh", "-c", "GOPATH=/go tmux"]
